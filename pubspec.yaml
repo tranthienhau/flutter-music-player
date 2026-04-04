@@ -1,0 +1,31 @@
+name: flutter_music_player
+description: "A Flutter music player POC demonstrating audio playback, playlists, equalizer, and background audio."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  just_audio: ^0.9.42
+  audio_service: ^0.18.15
+  audio_session: ^0.1.22
+  on_audio_query: ^2.9.0
+  flutter_riverpod: ^2.6.1
+  path_provider: ^2.1.5
+  hive_flutter: ^1.1.0
+  rxdart: ^0.28.0
+  palette_generator: ^0.3.3+4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
