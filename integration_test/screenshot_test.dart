@@ -58,7 +58,8 @@ void main() {
       ProviderScope(
         overrides: overrides(),
         child: MaterialApp(
-          theme: AppTheme.darkTheme,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
           home: const HomeScreen(),
         ),
       ),
@@ -81,8 +82,9 @@ void main() {
       ProviderScope(
         overrides: overrides(),
         child: MaterialApp(
-          theme: AppTheme.darkTheme,
-          home: const EqualizerScreen(),
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: const EqualizerScreen(embedded: true),
         ),
       ),
     );

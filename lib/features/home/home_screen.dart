@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/song.dart';
 import '../../theme/colors.dart';
 import '../../widgets/song_tile.dart';
+import '../equalizer/equalizer_screen.dart';
 import '../library/library_screen.dart';
 import '../player/mini_player.dart';
 import '../player/now_playing_screen.dart';
@@ -35,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _HomeContent(),
                   LibraryScreen(),
                   PlaylistScreen(),
+                  EqualizerScreen(embedded: true),
                 ],
               ),
             ),
@@ -58,6 +60,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(Icons.playlist_play_rounded),
             label: 'Playlists',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.equalizer_rounded),
+            label: 'Equalizer',
+          ),
         ],
       ),
     );
@@ -70,50 +76,96 @@ class _HomeContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final demoSongs = ref.watch(demoSongsProvider);
-    final recentlyPlayed = ref.watch(recentlyPlayedProvider);
     final handler = ref.watch(audioHandlerProvider);
+    final featured = demoSongs.take(5).toList();
 
     return SafeArea(
       child: CustomScrollView(
         slivers: [
-          // Header
+          // Brand bar
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
-                      Text(
-                        'Good ${_getGreeting()}',
-                        style: Theme.of(context).textTheme.headlineMedium,
+                      const Icon(
+                        Icons.graphic_eq_rounded,
+                        color: AppColors.primary,
+                        size: 26,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(width: 8),
                       Text(
-                        'What do you want to listen to?',
-                        style: Theme.of(context).textTheme.bodyLarge,
+                        'VibeTune',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                     ],
                   ),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.surfaceLight,
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
+                  const Icon(
+                    Icons.search_rounded,
+                    color: AppColors.textPrimary,
+                    size: 26,
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          // Greeting
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Good ${_getGreeting()}',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'What do you want to listen to?',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Search field
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppColors.softShadow,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.search_rounded,
+                      color: AppColors.textTertiary,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Search artists, songs, or podcasts...',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -121,15 +173,15 @@ class _HomeContent extends ConsumerWidget {
           // Quick play cards
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
               child: Row(
                 children: [
                   Expanded(
                     child: _QuickPlayCard(
                       icon: Icons.shuffle_rounded,
                       title: 'Shuffle All',
-                      subtitle: '${demoSongs.length} songs',
-                      gradient: const [AppColors.primary, Color(0xFF8B5CF6)],
+                      subtitle: '${demoSongs.length} Songs',
+                      gradient: AppColors.primaryGradient,
                       onTap: () async {
                         await handler.loadPlaylist(demoSongs);
                         await handler.setShuffleModeCustom(true);
@@ -137,13 +189,13 @@ class _HomeContent extends ConsumerWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _QuickPlayCard(
-                      icon: Icons.stream_rounded,
+                      icon: Icons.radio_rounded,
                       title: 'Streaming',
-                      subtitle: 'Online music',
-                      gradient: const [AppColors.accent, Color(0xFFEC4899)],
+                      subtitle: 'Online Radio',
+                      gradient: null, // light gray card
                       onTap: () async {
                         await handler.loadPlaylist(demoSongs);
                         await handler.play();
@@ -155,35 +207,59 @@ class _HomeContent extends ConsumerWidget {
             ),
           ),
 
-          // Recently played
-          if (recentlyPlayed.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _SectionHeader(title: 'Recently Played', onViewAll: () {}),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 180,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: recentlyPlayed.length.clamp(0, 10),
-                  itemBuilder: (context, index) {
-                    final song = recentlyPlayed[index];
-                    return _RecentCard(
-                      song: song,
-                      onTap: () async {
-                        await handler.playSong(song);
-                      },
-                    );
-                  },
-                ),
+          // Featured Tracks
+          SliverToBoxAdapter(
+            child: _SectionHeader(title: 'Featured Tracks', onViewAll: () {}),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 236,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                itemCount: featured.length,
+                itemBuilder: (context, index) {
+                  final song = featured[index];
+                  return _FeaturedCard(
+                    song: song,
+                    onTap: () async {
+                      await handler.loadPlaylist(featured, initialIndex: index);
+                      await handler.play();
+                      ref.read(recentlyPlayedProvider.notifier).addSong(song);
+                      if (context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NowPlayingScreen(),
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
               ),
             ),
-          ],
+          ),
 
-          // Browse / Demo songs
+          // Local Library
           SliverToBoxAdapter(
-            child: _SectionHeader(title: 'Browse', onViewAll: () {}),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Local Library',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const Icon(
+                    Icons.tune_rounded,
+                    color: AppColors.textSecondary,
+                    size: 22,
+                  ),
+                ],
+              ),
+            ),
           ),
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
@@ -229,17 +305,21 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title, style: Theme.of(context).textTheme.headlineSmall),
           if (onViewAll != null)
-            TextButton(
-              onPressed: onViewAll,
+            GestureDetector(
+              onTap: onViewAll,
               child: const Text(
                 'View All',
-                style: TextStyle(color: AppColors.primary, fontSize: 13),
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
         ],
@@ -252,7 +332,7 @@ class _QuickPlayCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final List<Color> gradient;
+  final Gradient? gradient;
   final VoidCallback onTap;
 
   const _QuickPlayCard({
@@ -265,47 +345,49 @@ class _QuickPlayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isGradient = gradient != null;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 100,
-        padding: const EdgeInsets.all(16),
+        height: 112,
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: gradient[0].withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(24),
+          gradient: gradient,
+          color: isGradient ? null : AppColors.surfaceVariant,
+          boxShadow: isGradient
+              ? AppColors.glow(AppColors.primary, alpha: 0.28)
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: Colors.white, size: 28),
+            Icon(
+              icon,
+              color: isGradient ? Colors.white : AppColors.textPrimary,
+              size: 28,
+            ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                  style: TextStyle(
+                    color: isGradient ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 11,
+                    color: isGradient
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -317,51 +399,78 @@ class _QuickPlayCard extends StatelessWidget {
   }
 }
 
-class _RecentCard extends StatelessWidget {
+class _FeaturedCard extends StatelessWidget {
   final Song song;
   final VoidCallback onTap;
 
-  const _RecentCard({required this.song, required this.onTap});
+  const _FeaturedCard({required this.song, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 130,
-        margin: const EdgeInsets.only(right: 12),
+        width: 172,
+        margin: const EdgeInsets.only(right: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 130,
-              height: 130,
+              width: 172,
+              height: 172,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: AppColors.cardGradient,
+                borderRadius: BorderRadius.circular(20),
+                gradient: AppColors.albumGradient(song.id),
+                boxShadow: AppColors.softShadow,
               ),
-              child: const Icon(
-                Icons.album_rounded,
-                color: AppColors.textTertiary,
-                size: 48,
+              child: Stack(
+                children: [
+                  const Positioned(
+                    top: 16,
+                    left: 16,
+                    child: Icon(
+                      Icons.music_note_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: Text(
+                      song.album.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               song.title,
               style: const TextStyle(
                 color: AppColors.textPrimary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 2),
             Text(
               song.artist,
               style: const TextStyle(
-                color: AppColors.textTertiary,
-                fontSize: 10,
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

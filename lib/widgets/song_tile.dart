@@ -36,16 +36,16 @@ class SongTile extends StatelessWidget {
       leading:
           leading ??
           Container(
-            width: 48,
-            height: 48,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               gradient: isPlaying ? AppColors.primaryGradient : null,
               color: isPlaying ? null : AppColors.surfaceLight,
             ),
             child: Icon(
               isPlaying ? Icons.equalizer_rounded : Icons.music_note_rounded,
-              color: isPlaying ? Colors.white : AppColors.textTertiary,
+              color: isPlaying ? Colors.white : AppColors.primary,
               size: 24,
             ),
           ),
@@ -53,48 +53,50 @@ class SongTile extends StatelessWidget {
         song.title,
         style: TextStyle(
           color: isPlaying ? AppColors.primary : AppColors.textPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Row(
-        children: [
-          Expanded(
-            child: Text(
-              song.artist,
-              style: TextStyle(
-                color: isPlaying
-                    ? AppColors.primaryLight
-                    : AppColors.textSecondary,
-                fontSize: 12,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Text(
+          song.artist,
+          style: TextStyle(
+            color: isPlaying ? AppColors.primaryLight : AppColors.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
-          if (showDuration) ...[
-            const SizedBox(width: 8),
-            Text(
-              _formatDuration(song.duration),
-              style: const TextStyle(
-                color: AppColors.textTertiary,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ],
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       trailing:
           trailing ??
-          IconButton(
-            icon: const Icon(
-              Icons.more_vert_rounded,
-              color: AppColors.textTertiary,
-              size: 20,
-            ),
-            onPressed: onMoreTap,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showDuration) ...[
+                Text(
+                  _formatDuration(song.duration),
+                  style: const TextStyle(
+                    color: AppColors.textTertiary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              IconButton(
+                icon: const Icon(
+                  Icons.more_vert_rounded,
+                  color: AppColors.textTertiary,
+                  size: 20,
+                ),
+                onPressed: onMoreTap,
+              ),
+            ],
           ),
       onTap: onTap,
     );

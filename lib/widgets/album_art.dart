@@ -25,16 +25,7 @@ class AlbumArt extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: showShadow
-            ? [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 30,
-                  offset: const Offset(0, 15),
-                  spreadRadius: -5,
-                ),
-              ]
-            : null,
+        boxShadow: showShadow ? AppColors.floatingShadow : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
@@ -64,18 +55,14 @@ class AlbumArt extends StatelessWidget {
 
   Widget _buildPlaceholder() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.surfaceVariant, AppColors.surfaceLight],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        gradient: AppColors.albumGradient(artUri ?? size),
       ),
       child: Center(
         child: Icon(
-          Icons.album_rounded,
-          size: size * 0.4,
-          color: AppColors.textTertiary.withValues(alpha: 0.5),
+          Icons.music_note_rounded,
+          size: size * 0.34,
+          color: Colors.white.withValues(alpha: 0.9),
         ),
       ),
     );
