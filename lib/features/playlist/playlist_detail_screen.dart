@@ -32,28 +32,23 @@ class PlaylistDetailScreen extends ConsumerWidget {
             SliverAppBar(
               expandedHeight: 200,
               pinned: true,
-              backgroundColor: AppColors.surface,
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              iconTheme: const IconThemeData(color: Colors.white),
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
                   currentPlaylist.name,
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary.withValues(alpha: 0.3),
-                        AppColors.background,
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient,
                   ),
                   child: Center(
                     child: Icon(
                       Icons.queue_music_rounded,
                       size: 64,
-                      color: AppColors.primary.withValues(alpha: 0.5),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ),

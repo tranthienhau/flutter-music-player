@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -15,10 +16,13 @@ class MusicPlayerApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final onboardingComplete = ref.watch(onboardingCompleteProvider);
 
+    // Bright background -> dark status-bar icons.
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+
     return MaterialApp(
-      title: 'Flutter Music Player',
+      title: 'VibeTune',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       home: onboardingComplete
           ? const HomeScreen()
           : OnboardingScreen(
