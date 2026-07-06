@@ -41,59 +41,32 @@ class _SeekBarState extends State<SeekBar> {
   Widget build(BuildContext context) {
     final totalMs = widget.duration.inMilliseconds.toDouble();
     final posMs = widget.position.inMilliseconds.toDouble();
-    final bufMs = widget.bufferedPosition.inMilliseconds.toDouble();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Stack(
-          children: [
-            // Buffered position track
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                thumbShape: SliderComponentShape.noThumb,
-                activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
-                inactiveTrackColor: AppColors.surfaceVariant,
-                trackHeight: 3,
-                overlayShape: SliderComponentShape.noOverlay,
-              ),
-              child: Slider(
-                min: 0,
-                max: totalMs > 0 ? totalMs : 1,
-                value: (bufMs).clamp(0, totalMs > 0 ? totalMs : 1),
-                onChanged: (_) {},
-              ),
-            ),
-            // Active position track
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: Colors.transparent,
-                thumbColor: AppColors.primary,
-                overlayColor: AppColors.primary.withValues(alpha: 0.2),
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              ),
-              child: Slider(
-                min: 0,
-                max: totalMs > 0 ? totalMs : 1,
-                value: (_dragValue ?? posMs).clamp(
-                  0,
-                  totalMs > 0 ? totalMs : 1,
-                ),
-                onChanged: (value) {
-                  setState(() => _dragValue = value);
-                  widget.onChanged?.call(Duration(milliseconds: value.round()));
-                },
-                onChangeEnd: (value) {
-                  widget.onChangeEnd?.call(
-                    Duration(milliseconds: value.round()),
-                  );
-                  setState(() => _dragValue = null);
-                },
-              ),
-            ),
-          ],
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 6,
+            trackShape: const _GradientTrackShape(),
+            inactiveTrackColor: AppColors.surfaceVariant,
+            thumbColor: Colors.white,
+            overlayColor: AppColors.primary.withValues(alpha: 0.12),
+            thumbShape: const _WhiteThumbShape(radius: 9),
+          ),
+          child: Slider(
+            min: 0,
+            max: totalMs > 0 ? totalMs : 1,
+            value: (_dragValue ?? posMs).clamp(0, totalMs > 0 ? totalMs : 1),
+            onChanged: (value) {
+              setState(() => _dragValue = value);
+              widget.onChanged?.call(Duration(milliseconds: value.round()));
+            },
+            onChangeEnd: (value) {
+              widget.onChangeEnd?.call(Duration(milliseconds: value.round()));
+              setState(() => _dragValue = null);
+            },
+          ),
         ),
         if (widget.showLabels)
           Padding(
@@ -103,20 +76,118 @@ class _SeekBarState extends State<SeekBar> {
               children: [
                 Text(
                   _formatDuration(widget.position),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textTertiary,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   _formatDuration(widget.duration),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textTertiary,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Rounded track where the active portion is a violet -> magenta gradient.
+class _GradientTrackShape extends RoundedRectSliderTrackShape {
+  const _GradientTrackShape();
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset offset, {
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required Animation<double> enableAnimation,
+    required Offset thumbCenter,
+    Offset? secondaryOffset,
+    bool isEnabled = false,
+    bool isDiscrete = false,
+    double additionalActiveTrackHeight = 2.0,
+    required TextDirection textDirection,
+  }) {
+    final trackRect = getPreferredRect(
+      parentBox: parentBox,
+      offset: offset,
+      sliderTheme: sliderTheme,
+      isEnabled: isEnabled,
+      isDiscrete: isDiscrete,
+    );
+    final radius = Radius.circular(trackRect.height / 2);
+
+    // Inactive (full) track.
+    final inactivePaint = Paint()..color = sliderTheme.inactiveTrackColor!;
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(trackRect, radius),
+      inactivePaint,
+    );
+
+    // Active (gradient) portion up to the thumb.
+    final activeRect = Rect.fromLTRB(
+      trackRect.left,
+      trackRect.top,
+      thumbCenter.dx,
+      trackRect.bottom,
+    );
+    final activePaint = Paint()
+      ..shader = AppColors.primaryGradient.createShader(activeRect);
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(activeRect, radius),
+      activePaint,
+    );
+  }
+}
+
+/// Large white thumb with a soft shadow.
+class _WhiteThumbShape extends SliderComponentShape {
+  final double radius;
+  const _WhiteThumbShape({this.radius = 9});
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) =>
+      Size.fromRadius(radius);
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) {
+    final canvas = context.canvas;
+    canvas.drawCircle(
+      center.translate(0, 2),
+      radius,
+      Paint()
+        ..color = AppColors.primary.withValues(alpha: 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawCircle(center, radius, Paint()..color = Colors.white);
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = AppColors.surfaceVariant
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.5,
     );
   }
 }
